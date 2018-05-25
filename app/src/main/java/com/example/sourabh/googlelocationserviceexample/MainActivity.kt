@@ -2,9 +2,13 @@ package com.example.sourabh.googlelocationserviceexample
 
 import android.app.Activity
 import android.content.Intent
+import android.location.Geocoder
 import android.location.Location
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.os.Handler
+import android.os.Parcelable
+import android.os.ResultReceiver
 import android.support.v4.app.ActivityCompat
 import android.view.View
 import android.widget.Toast
@@ -14,8 +18,11 @@ import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
 import kotlinx.android.synthetic.main.activity_main.*
 
-private val GOOGLE_SERVICE_DIALOG: Int = 1231
-private val LOCATION_SETTINGS_REQ: Int = 34321
+private object RequestCodes{
+    const val GOOGLE_SERVICE_DIALOG: Int = 1231
+    const val LOCATION_SETTINGS_REQ: Int = 34321
+    const val LOCATION_PERMISSION_REQ: Int = 143
+}
 
 class MainActivity : AppCompatActivity() {
 
@@ -48,14 +55,14 @@ class MainActivity : AppCompatActivity() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         when (requestCode) {
-            GOOGLE_SERVICE_DIALOG -> {
+            RequestCodes.GOOGLE_SERVICE_DIALOG -> {
                 Toast.makeText(this, "Got result from google service check", Toast.LENGTH_SHORT).show()
                 when (resultCode) {
                     Activity.RESULT_OK -> Toast.makeText(this, "Good Work", Toast.LENGTH_SHORT).show()
                     Activity.RESULT_CANCELED -> Toast.makeText(this, "Bad Work", Toast.LENGTH_SHORT).show()
                 }
             }
-            LOCATION_SETTINGS_REQ -> {
+            RequestCodes.LOCATION_SETTINGS_REQ -> {
                 Toast.makeText(this, "Got result from location settings change request", Toast.LENGTH_SHORT).show()
                 when (resultCode) {
                     Activity.RESULT_OK -> {
@@ -68,7 +75,7 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
             }
-            LOCATION_PERMISSION_REQ -> {
+            RequestCodes.LOCATION_PERMISSION_REQ -> {
                 when (resultCode) {
                     Activity.RESULT_OK -> {
                         initDefaultUI()
@@ -83,8 +90,6 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var mLocationRequest: LocationRequest
 
-    private val LOCATION_PERMISSION_REQ: Int = 143
-
     override fun onResume() {
         super.onResume()
         if(hasPermssion(this)) {
@@ -98,19 +103,19 @@ class MainActivity : AppCompatActivity() {
                         }
                         settingsTask.addOnFailureListener { exception ->
                             if (exception is ResolvableApiException) {
-                                exception.startResolutionForResult(this, LOCATION_SETTINGS_REQ)
+                                exception.startResolutionForResult(this, RequestCodes.LOCATION_SETTINGS_REQ)
                             }
                         }
                     }
                     else -> {
                         initNullUI()
-                        val dialog = GoogleApiAvailability.getInstance().getErrorDialog(this, result, GOOGLE_SERVICE_DIALOG)
+                        val dialog = GoogleApiAvailability.getInstance().getErrorDialog(this, result, RequestCodes.GOOGLE_SERVICE_DIALOG)
                         dialog.show()
                     }
                 }
             }
         }else{
-            ActivityCompat.requestPermissions(this, arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION), LOCATION_PERMISSION_REQ)
+            ActivityCompat.requestPermissions(this, arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION), RequestCodes.LOCATION_PERMISSION_REQ)
         }
     }
 
@@ -133,6 +138,7 @@ class MainActivity : AppCompatActivity() {
                     return
                 for(location in locations){
                     updateUI(location)
+                    startAddressResolve(location)
                 }
             }
         }
@@ -157,10 +163,23 @@ class MainActivity : AppCompatActivity() {
                 initNullUI(enableButton = true)
             }else{
                 updateUI(location)
+                if(Geocoder.isPresent()){
+                    startAddressResolve(location)
+                }
             }
         }.addOnFailureListener { exception ->
 
         }
+    }
+
+    private val resultReceiver = AddressResultReceiver(Handler())
+
+    fun startAddressResolve(location: Location){
+        val intent = Intent(this, FetchAddressIntentService::class.java).apply {
+            putExtra(FetchServiceConstants.RECEIVER, resultReceiver)
+            putExtra(FetchServiceConstants.LOCATION_DATA_EXTRA, location)
+        }
+        startService(intent)
     }
 
     private lateinit var fusedLocationProvider: FusedLocationProviderClient
@@ -187,4 +206,17 @@ class MainActivity : AppCompatActivity() {
         toggleUpdateBtn.isEnabled = enableButton
         toggleUpdateBtn.setOnClickListener(null)
     }
+
+    inner class AddressResultReceiver(handler: Handler): ResultReceiver(handler){
+        override fun onReceiveResult(resultCode: Int, resultData: Bundle?) {
+            val address = resultData?.getString(FetchServiceConstants.RESULT_DATA_KEY) ?: ""
+            displayAddress(address)
+        }
+    }
+
+    private fun displayAddress(addr: String) {
+        address.text = addr
+    }
+
+
 }
