@@ -81,6 +81,6 @@ fun hasPermssion(context: Context): Boolean{
 
 fun formatTime(time: Long): String{
     val date = Date(time)
-    val df = SimpleDateFormat("dd/MM/yy hh:mm:ss", Locale.US)
+    val df = SimpleDateFormat("dd/MM/yy hh:mm:ss", Locale.getDefault())
     return df.format(date)
 }
