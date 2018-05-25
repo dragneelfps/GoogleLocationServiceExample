@@ -140,7 +140,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun updateUI(location: Location?) {
         location?.let {
-            time.text = it.time.toString()
+            time.text = formatTime(it.time)
             latitude.text = it.latitude.toString()
             longitude.text = it.longitude.toString()
         }

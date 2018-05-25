@@ -12,6 +12,8 @@ import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.LocationSettingsRequest
 import com.google.android.gms.location.LocationSettingsResponse
 import com.google.android.gms.tasks.Task
+import java.text.SimpleDateFormat
+import java.util.*
 
 /**
  * Creates and returns a location request object with specified priority and interval rate
@@ -73,8 +75,12 @@ fun hasSdk(requiredSdkVersion: Int): Boolean {
     return android.os.Build.VERSION.SDK_INT >= requiredSdkVersion
 }
 
-
-
 fun hasPermssion(context: Context): Boolean{
     return ActivityCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+}
+
+fun formatTime(time: Long): String{
+    val date = Date(time)
+    val df = SimpleDateFormat("dd/MM/yy hh:mm:ss", Locale.US)
+    return df.format(date)
 }
