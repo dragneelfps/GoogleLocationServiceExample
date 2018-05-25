@@ -11,7 +11,9 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".LastKnownLocationActivity"></activity>
+        <activity android:name=".LastKnownLocationActivity" />
+        <activity android:name=".LocationUpdatesActivity">
+        </activity>
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -22,7 +24,7 @@
 
         <service
             android:name=".FetchAddressIntentService"
-            android:exported="false"></service>
+            android:exported="false" />
     </application>
 
 </manifest>

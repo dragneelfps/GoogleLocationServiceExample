@@ -33,7 +33,7 @@ class FetchAddressIntentService : IntentService("FetchAddressIntentService") {
         val mGeocoder = Geocoder(this, Locale.getDefault())
         val location = intent.getParcelableExtra<Location?>(FetchServiceConstants.LOCATION_DATA_EXTRA)
         location ?: return
-        mResultReceiver = intent.getParcelableExtra<MainActivity.AddressResultReceiver>(FetchServiceConstants.RECEIVER)
+        mResultReceiver = intent.getParcelableExtra<LocationUpdatesActivity.AddressResultReceiver>(FetchServiceConstants.RECEIVER)
         var addresses = emptyList<Address>()
         try{
             addresses = mGeocoder.getFromLocation(location.latitude, location.longitude, mMaxResults)
